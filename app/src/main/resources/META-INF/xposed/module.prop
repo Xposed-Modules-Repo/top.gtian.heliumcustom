@@ -1,0 +1,8 @@
+name=Helium NTP Hook
+version=1.0.0
+versionCode=1
+author=custom
+description=Custom new tab page URL for Helium Browser
+minApiVersion=102
+targetApiVersion=102
+staticScope=false

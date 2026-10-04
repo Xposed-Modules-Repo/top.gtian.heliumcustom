@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Helium NTP Hook</string>
+    <string name="module_description">自定义 Helium/Titanium Browser 新建标签页跳转 URL</string>
+    <string name="target_url_label">目标 URL</string>
+    <string name="save_button">保存并启用</string>
+    <string name="url_hint">https://your-custom-nav-site.com</string>
+    <string name="saved_toast">已保存，重启 Helium 浏览器生效</string>
+    <string name="enable_hook_label">启用 Hook</string>
+    <string name="status_active">状态：已启用 → %1$s</string>
+    <string name="status_inactive">状态：未启用</string>
+</resources>
