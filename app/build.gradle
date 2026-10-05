@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.customntp"
+    namespace = "top.gtian.heliumcustom"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.customntp"
+        applicationId = "top.gtian.heliumcustom"
         minSdk = 29
         targetSdk = 34
         versionCode = 261005

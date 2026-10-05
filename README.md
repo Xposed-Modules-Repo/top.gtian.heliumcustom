@@ -89,8 +89,8 @@ custom-ntp-lsp/
 │   └── src/main/
 │       ├── AndroidManifest.xml     # xposedmodule meta-data + scope
 │       ├── assets/xposed_init      # 入口类全限定名
-│       ├── java/com/example/customntp/
-│       │   ├── MainHook.kt         # 核心 Hook 逻辑（4 级策略）
+│       ├── java/top/gtian/heliumcustom/
+│       │   ├── Main.kt         # 核心 Hook 逻辑（4 级策略）
 │       │   └── ConfigActivity.kt   # 配置 UI
 │       └── res/
 │           ├── layout/activity_config.xml

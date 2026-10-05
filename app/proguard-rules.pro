@@ -1,4 +1,4 @@
 # Keep Xposed entry point
--keep class com.example.customntp.MainHook { *; }
+-keep class top.gtian.heliumcustom.Main { *; }
 # Keep config activity
--keep class com.example.customntp.ConfigActivity { *; }
+-keep class top.gtian.heliumcustom.ConfigActivity { *; }

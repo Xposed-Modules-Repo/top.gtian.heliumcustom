@@ -1,4 +1,4 @@
-package com.example.customntp
+package top.gtian.heliumcustom
 
 import android.content.Context
 import android.os.Build
@@ -33,7 +33,7 @@ class Main : XposedModule() {
     companion object {
         private const val TAG = "HeliumNtpHook"
         private const val TARGET_PKG = "io.github.jqssun.helium"
-        private const val MODULE_PKG = "com.example.customntp"
+        private const val MODULE_PKG = "top.gtian.heliumcustom"
         private const val LOAD_URL_PARAMS = "org.chromium.content_public.browser.LoadUrlParams"
         private const val E2E_LAYOUT_CLASS = "org.chromium.ui.edge_to_edge.layout.EdgeToEdgeBaseLayout"
         private const val TCC_CLASS = "org.chromium.chrome.browser.toolbar.top.ToolbarControlContainer"
