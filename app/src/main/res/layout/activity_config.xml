@@ -28,6 +28,13 @@
         android:text="@string/enable_hook_label"
         android:layout_marginBottom="16dp" />
 
+    <com.google.android.material.materialswitch.MaterialSwitch
+        android:id="@+id/fullscreenSwitch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/enable_fullscreen_label"
+        android:layout_marginBottom="16dp" />
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

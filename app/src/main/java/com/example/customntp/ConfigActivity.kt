@@ -20,6 +20,7 @@ class ConfigActivity : AppCompatActivity() {
         const val PREFS_NAME = "custom_ntp_config"
         const val KEY_ENABLED = "enabled"
         const val KEY_TARGET_URL = "target_url"
+        const val KEY_FULLSCREEN = "fullscreen"
         const val DEFAULT_URL = "chrome-native://bookmarks/folder/10397"
     }
 
@@ -30,14 +31,17 @@ class ConfigActivity : AppCompatActivity() {
         val prefs: SharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
         val enableSwitch = findViewById<MaterialSwitch>(R.id.enableSwitch)
+        val fullscreenSwitch = findViewById<MaterialSwitch>(R.id.fullscreenSwitch)
         val urlInput = findViewById<EditText>(R.id.urlInput)
         val saveButton = findViewById<Button>(R.id.saveButton)
         val statusText = findViewById<TextView>(R.id.statusText)
 
         // Load current values
-        val enabled = prefs.getBoolean(KEY_ENABLED, false)
+        val enabled = prefs.getBoolean(KEY_ENABLED, true)
+        val fullscreen = prefs.getBoolean(KEY_FULLSCREEN, true)
         val url = prefs.getString(KEY_TARGET_URL, DEFAULT_URL)
         enableSwitch.isChecked = enabled
+        fullscreenSwitch.isChecked = fullscreen
         urlInput.setText(url)
         updateStatus(statusText, enabled, url)
 
@@ -60,6 +64,7 @@ class ConfigActivity : AppCompatActivity() {
 
             prefs.edit()
                 .putBoolean(KEY_ENABLED, enableSwitch.isChecked)
+                .putBoolean(KEY_FULLSCREEN, fullscreenSwitch.isChecked)
                 .putString(KEY_TARGET_URL, targetUrl)
                 .apply()
 

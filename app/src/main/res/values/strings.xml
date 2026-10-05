@@ -7,6 +7,7 @@
     <string name="url_hint">https://your-custom-nav-site.com</string>
     <string name="saved_toast">已保存，重启 Helium 浏览器生效</string>
     <string name="enable_hook_label">启用 Hook</string>
+    <string name="enable_fullscreen_label">启用全屏沉浸模式（隐藏状态栏/导航栏）</string>
     <string name="status_active">状态：已启用 → %1$s</string>
     <string name="status_inactive">状态：未启用</string>
 </resources>
