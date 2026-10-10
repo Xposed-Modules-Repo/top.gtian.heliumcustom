@@ -11,8 +11,8 @@ android {
         applicationId = "top.gtian.heliumcustom"
         minSdk = 29
         targetSdk = 34
-        versionCode = 261007
-        versionName = "v26.10.7"
+        versionCode = 261010
+        versionName = "v26.10.10"
     }
 
     buildTypes {

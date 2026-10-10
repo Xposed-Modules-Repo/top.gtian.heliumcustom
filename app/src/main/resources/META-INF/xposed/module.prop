@@ -1,6 +1,6 @@
 name=Helium NTP Hook
-version=v26.10.7
-versionCode=261007
+version=v26.10.10
+versionCode=261010
 author=custom
 description=Custom new tab page URL for Helium Browser
 minApiVersion=102
