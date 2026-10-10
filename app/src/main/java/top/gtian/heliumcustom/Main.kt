@@ -1,7 +1,9 @@
 package top.gtian.heliumcustom
 
 import android.content.Context
+import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.WindowInsets
@@ -53,8 +55,7 @@ class Main : XposedModule() {
     private var e2eClass: Class<*>? = null
     private var tccClass: Class<*>? = null
     private var customUrl: String = ConfigActivity.DEFAULT_URL
-    private var hookEnabled: Boolean = true
-    private var fullscreenEnabled: Boolean = true
+    private var fullscreenEnabled: Boolean = false
     // 诊断计数器
     private val paddingLogCount = AtomicInteger(0)
     private val onDrawLogCount = AtomicInteger(0)
@@ -68,23 +69,14 @@ class Main : XposedModule() {
         if (!param.isFirstPackage) return
         if (param.packageName != TARGET_PKG) return
 
-        loadConfig()
-        log(Log.INFO, TAG, "loaded into $TARGET_PKG (pid=${android.os.Process.myPid()}), " +
-            "custom URL = $customUrl, fullscreen = $fullscreenEnabled")
+        log(Log.INFO, TAG, "loaded into $TARGET_PKG (pid=${android.os.Process.myPid()})")
 
-        // 全屏沉浸模式：与 URL 重定向相互独立，单独由开关控制
-        if (fullscreenEnabled) {
-            hookImmersiveFullscreen()
-            hookSetPaddingForEdgeToEdge()
-        }
+        // 配置加载 + 全屏 hook 延迟到 Application.onCreate
+        // （onPackageLoaded 阶段 currentApplication() 可能返回 null）
+        hookApplicationForConfig()
 
         // 诊断：观察 Omnibox 滚动隐藏行为
         hookTranslationYForDebug()
-
-        if (!hookEnabled) {
-            log(Log.INFO, TAG, "URL hook disabled by config")
-            return
-        }
 
         // 策略 1: defaultClassLoader 直接加载（可能已加载）
         val cl = param.defaultClassLoader
@@ -100,18 +92,73 @@ class Main : XposedModule() {
         hookActivityOnCreate()
     }
 
+    // ── Application.onCreate 加载配置 ─────────────────────
+
+    /**
+     * hook Application.onCreate：此时 currentApplication() 一定可用。
+     * 加载配置后，若全屏开关开启则注入沉浸式全屏 hook。
+     */
+    private fun hookApplicationForConfig() {
+        try {
+            val onCreate = android.app.Application::class.java.getDeclaredMethod("onCreate")
+            hook(onCreate)
+                .setId("app-oncreate-config")
+                .setExceptionMode(XposedInterface.ExceptionMode.PROTECTIVE)
+                .intercept { chain ->
+                    chain.proceed()
+                    loadConfig()
+                    log(Log.INFO, TAG, "config applied: fullscreen=$fullscreenEnabled, url=$customUrl")
+                    if (fullscreenEnabled) {
+                        hookImmersiveFullscreen()
+                        hookSetPaddingForEdgeToEdge()
+                    }
+                }
+            log(Log.INFO, TAG, "✓ hooked Application.onCreate for config")
+        } catch (e: Throwable) {
+            log(Log.ERROR, TAG, "hook Application.onCreate failed: ${e.message}, fallback to direct load")
+            loadConfig()
+            if (fullscreenEnabled) {
+                hookImmersiveFullscreen()
+                hookSetPaddingForEdgeToEdge()
+            }
+        }
+    }
+
     // ── 配置读取 ─────────────────────────────────────────────
 
     private fun loadConfig() {
+        val at = Class.forName("android.app.ActivityThread")
+        val app = at.getMethod("currentApplication").invoke(null) as? Context
+        if (app == null) {
+            log(Log.WARN, TAG, "loadConfig: currentApplication() is null, using defaults")
+            return
+        }
+
+        // 优先走 ContentProvider（binder IPC），跨 UID 稳定，不受 SELinux 文件读限制
         try {
-            val at = Class.forName("android.app.ActivityThread")
-            val app = at.getMethod("currentApplication").invoke(null) as? Context ?: return
+            val bundle = app.contentResolver.call(
+                ConfigProvider.uri(), ConfigProvider.METHOD_GET, null, null
+            )
+            if (bundle != null) {
+                fullscreenEnabled = bundle.getBoolean(ConfigActivity.KEY_FULLSCREEN, false)
+                customUrl = bundle.getString(ConfigActivity.KEY_TARGET_URL)
+                    ?: ConfigActivity.DEFAULT_URL
+                log(Log.INFO, TAG, "config via ContentProvider: fullscreen=$fullscreenEnabled, url=$customUrl")
+                return
+            }
+            log(Log.WARN, TAG, "ContentProvider returned null, fallback to prefs file")
+        } catch (e: Throwable) {
+            log(Log.WARN, TAG, "ContentProvider read failed: ${e.message}, fallback to prefs file")
+        }
+
+        // 回退：直接读 prefs 文件（严格 SELinux ROM 上多半失败，仅作兜底）
+        try {
             val mCtx = app.createPackageContext(MODULE_PKG, Context.CONTEXT_IGNORE_SECURITY)
             val prefs = mCtx.getSharedPreferences(ConfigActivity.PREFS_NAME, Context.MODE_PRIVATE)
-            hookEnabled = prefs.getBoolean(ConfigActivity.KEY_ENABLED, true)
-            fullscreenEnabled = prefs.getBoolean(ConfigActivity.KEY_FULLSCREEN, true)
+            fullscreenEnabled = prefs.getBoolean(ConfigActivity.KEY_FULLSCREEN, false)
             customUrl = prefs.getString(ConfigActivity.KEY_TARGET_URL, ConfigActivity.DEFAULT_URL)
                 ?: ConfigActivity.DEFAULT_URL
+            log(Log.INFO, TAG, "config via prefs file: fullscreen=$fullscreenEnabled, url=$customUrl")
         } catch (e: Throwable) {
             log(Log.WARN, TAG, "config read failed, using defaults: ${e.message}")
         }

@@ -19,6 +19,12 @@
             </intent-filter>
         </activity>
 
+        <!-- 跨 UID 配置投递：Helium 进程通过 ContentResolver 读取配置 -->
+        <provider
+            android:name=".ConfigProvider"
+            android:authorities="top.gtian.heliumcustom.config"
+            android:exported="true" />
+
     </application>
 
 </manifest>

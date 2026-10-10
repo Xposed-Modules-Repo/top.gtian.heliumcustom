@@ -22,13 +22,6 @@
         android:layout_marginBottom="24dp" />
 
     <com.google.android.material.materialswitch.MaterialSwitch
-        android:id="@+id/enableSwitch"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/enable_hook_label"
-        android:layout_marginBottom="16dp" />
-
-    <com.google.android.material.materialswitch.MaterialSwitch
         android:id="@+id/fullscreenSwitch"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -62,7 +55,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="说明：\n1. 在 LSPosed 中启用本模块，作用域选择 io.github.jqssun.helium\n2. 强制停止 Helium 浏览器后重新打开\n3. 新建标签页将自动跳转到上方 URL"
+        android:text="说明：\n1. NTP Hook 始终启用，无需开关\n2. 在 LSPosed 中启用本模块，作用域选择 io.github.jqssun.helium\n3. 强制停止 Helium 浏览器后重新打开\n4. 新建标签页将自动跳转到上方 URL"
         android:textSize="13sp"
         android:textColor="#5F6368"
         android:layout_marginTop="24dp" />
