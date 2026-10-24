@@ -22,6 +22,13 @@ class ConfigActivity : AppCompatActivity() {
         const val KEY_TARGET_URL = "target_url"
         const val KEY_FULLSCREEN = "fullscreen"
         const val DEFAULT_URL = "chrome-native://bookmarks/folder/10397"
+
+        /**
+         * LSPosed 框架侧 Remote Preferences 的 group 名。
+         * 目标进程（Helium）用同一 group 读取，脱离模块 app 进程独立生效。
+         * 必须是 const（编译期内联），避免在 Helium 进程触发对本类的加载。
+         */
+        const val REMOTE_PREFS_GROUP = "ntp_config"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,8 +82,28 @@ class ConfigActivity : AppCompatActivity() {
                 // ignore
             }
 
+            // 同步到框架 Remote Preferences：Helium 进程可脱离模块进程独立读取，
+            // 即使本模块被从最近任务划掉，Hook 依然生效（本版本核心修复）。
+            var remoteSaved = false
+            val svc = HeliumCustomApp.service
+            if (svc != null) {
+                try {
+                    svc.getRemotePreferences(REMOTE_PREFS_GROUP).edit()
+                        ?.putBoolean(KEY_FULLSCREEN, fullscreenSwitch.isChecked)
+                        ?.putString(KEY_TARGET_URL, targetUrl)
+                        ?.apply()
+                    remoteSaved = true
+                } catch (e: Exception) {
+                    // ignore, fallback to local-only
+                }
+            }
+
             updateStatus(statusText, fullscreenSwitch.isChecked, targetUrl)
-            Toast.makeText(this, R.string.saved_toast, Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                this,
+                if (remoteSaved) R.string.saved_toast else R.string.saved_toast_no_service,
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 

@@ -5,14 +5,14 @@ plugins {
 
 android {
     namespace = "top.gtian.heliumcustom"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "top.gtian.heliumcustom"
         minSdk = 29
         targetSdk = 34
-        versionCode = 261010
-        versionName = "v26.10.10"
+        versionCode = 261025
+        versionName = "v26.10.25"
     }
 
     buildTypes {
@@ -35,8 +35,11 @@ android {
 }
 
 dependencies {
-    // Modern Xposed API 102, 框架运行时提供实现
+    // Modern Xposed API 102, 框架运行时提供实现（compileOnly，不打进 APK）
     compileOnly("io.github.libxposed:api:102.0.0")
+    // 模块 app 侧与框架通信（读写 remote preferences / files），需打包进 app。
+    // 选用 101：其 interface 要求 compileSdk 36（102 要求 37），与 framework API 102 向后兼容。
+    implementation("io.github.libxposed:service:101.0.0")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.android.material:material:1.12.0")
 }

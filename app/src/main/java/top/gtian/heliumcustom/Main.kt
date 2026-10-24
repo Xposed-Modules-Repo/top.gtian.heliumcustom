@@ -127,6 +127,11 @@ class Main : XposedModule() {
     // ── 配置读取 ─────────────────────────────────────────────
 
     private fun loadConfig() {
+        // 1) 优先：LSPosed 框架侧 Remote Preferences。
+        //    存储在框架数据库，不依赖模块 app 进程存活，也不受跨 UID / SELinux 文件读限制，
+        //    因此模块 app 被从最近任务划掉后依然可读（修复本版本的核心 bug）。
+        if (loadConfigFromRemotePrefs()) return
+
         val at = Class.forName("android.app.ActivityThread")
         val app = at.getMethod("currentApplication").invoke(null) as? Context
         if (app == null) {
@@ -134,7 +139,7 @@ class Main : XposedModule() {
             return
         }
 
-        // 优先走 ContentProvider（binder IPC），跨 UID 稳定，不受 SELinux 文件读限制
+        // 2) 回退：ContentProvider（binder IPC，跨 UID 稳定，但依赖模块进程存活）
         try {
             val bundle = app.contentResolver.call(
                 ConfigProvider.uri(), ConfigProvider.METHOD_GET, null, null
@@ -151,7 +156,7 @@ class Main : XposedModule() {
             log(Log.WARN, TAG, "ContentProvider read failed: ${e.message}, fallback to prefs file")
         }
 
-        // 回退：直接读 prefs 文件（严格 SELinux ROM 上多半失败，仅作兜底）
+        // 3) 回退：直接读 prefs 文件（严格 SELinux ROM 上多半失败，仅作兜底）
         try {
             val mCtx = app.createPackageContext(MODULE_PKG, Context.CONTEXT_IGNORE_SECURITY)
             val prefs = mCtx.getSharedPreferences(ConfigActivity.PREFS_NAME, Context.MODE_PRIVATE)
@@ -161,6 +166,29 @@ class Main : XposedModule() {
             log(Log.INFO, TAG, "config via prefs file: fullscreen=$fullscreenEnabled, url=$customUrl")
         } catch (e: Throwable) {
             log(Log.WARN, TAG, "config read failed, using defaults: ${e.message}")
+        }
+    }
+
+    /**
+     * 从框架 Remote Preferences 读取配置。
+     * 返回 true 表示读到有效配置（已写入过 target_url），可跳过后续回退通道。
+     * 框架不支持（抛 UnsupportedOperationException）或尚未写入时返回 false。
+     */
+    private fun loadConfigFromRemotePrefs(): Boolean {
+        return try {
+            val prefs = getRemotePreferences(ConfigActivity.REMOTE_PREFS_GROUP)
+            if (!prefs.contains(ConfigActivity.KEY_TARGET_URL)) {
+                log(Log.INFO, TAG, "remote prefs not written yet, fallback")
+                return false
+            }
+            fullscreenEnabled = prefs.getBoolean(ConfigActivity.KEY_FULLSCREEN, false)
+            customUrl = prefs.getString(ConfigActivity.KEY_TARGET_URL, ConfigActivity.DEFAULT_URL)
+                ?: ConfigActivity.DEFAULT_URL
+            log(Log.INFO, TAG, "config via RemotePreferences: fullscreen=$fullscreenEnabled, url=$customUrl")
+            true
+        } catch (e: Throwable) {
+            log(Log.WARN, TAG, "remote prefs unavailable: ${e.message}, fallback")
+            false
         }
     }
 
